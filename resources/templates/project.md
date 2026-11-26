@@ -32,7 +32,7 @@ tags:
 
 | Week | Status | Notes |
 |------|--------|-------|
-| [[2025-W01]] | | |
+| YYYY-WNN | | |
 
 ## Related Notes
 <!-- Links to related concepts, papers, patterns -->

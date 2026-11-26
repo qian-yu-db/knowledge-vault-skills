@@ -115,7 +115,6 @@ created: {{date:YYYY-MM-DD}}
 - [ ] Check completion rate — improving?
 - [ ] Update `~/.claude/CLAUDE.md` if new friction patterns found
 - [ ] Create new skill if seeing repeated instructions
-- Reference: [[workflow-claude-code-interaction-patterns]]
 
 ## Next Week
 -

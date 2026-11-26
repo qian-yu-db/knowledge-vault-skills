@@ -67,8 +67,9 @@ Every skill that changes permanent notes shows a plan and waits for your approva
 ```bash
 uv run --with pytest pytest -q tests                  # lint/scan script tests
 claude plugin validate . --strict                     # manifest and structure
+uv run --script evals/run_smoke.py --baseline         # behavior evals, headless (works with gateway/apiKeyHelper auth)
 claude plugin eval . --scaffold --no-publish --runs 1 \
-  --allow-tools "Bash(uv run *)" "Bash(date *)" "Bash(ls *)"   # behavior evals (evals/)
+  --allow-tools "Bash(uv run *)" "Bash(date *)" "Bash(ls *)"   # same cases via the official runner (needs direct API auth)
 uv run --script scripts/vault_lint.py --vault ~/my-vault --format text   # lint a real vault
 ```
 
