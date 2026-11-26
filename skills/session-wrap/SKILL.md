@@ -1,102 +1,68 @@
 ---
 name: session-wrap
-description: Capture the current Claude Code session state — what was done, what's broken, and what to do next — as a log entry in the Obsidian vault, then extract vault-worthy knowledge and write it back into permanent notes. Prevents broken state and lost insights from carrying across sessions. Use at the end of any non-trivial session.
+description: Records an explicitly requested handoff for the current Claude Code session in the knowledge vault's weekly log and log.md (done, issues, next step, key files), then proposes reusable insights to write back into permanent notes. Use only when the user asks to wrap up, hand off or log the session.
+argument-hint: "[topic]"
+allowed-tools: Read, Grep, Glob, Bash(date *), Bash(git status*), Bash(git diff --stat*)
 ---
 
 # Session Wrap
 
-Capture session state and compound knowledge before ending. This prevents context loss between sessions AND ensures research explorations enrich the permanent vault.
+Invoking this skill counts as approval to write the session log. Changes to permanent notes need separate approval.
 
----
+## Setup
 
-## Part A: Session Log
+- **Vault root**: `${user_config.vault_path}`. If blank or a literal placeholder, use the current working directory, but only if it contains `20-notes/`. Otherwise ask for the vault path.
+- Read `${CLAUDE_PLUGIN_ROOT}/resources/vault-conventions.md` before Part B.
+- Now: !`date "+%Y-%m-%d %H:%M (%A)"` · ISO week file: `50-logs/`!`date +%G`/!`date +%G-W%V`.md
 
-1. **Review the conversation** — summarize what was accomplished, what failed, and what's unfinished
+## Part A: Session log
 
-2. **Determine the current weekly log file**:
-   - Calculate the current ISO week: run `date +%Y-W%W`
-   - The log lives at `50-logs/YYYY/YYYY-WXX.md`
-   - Read the weekly log to find the right day section
+1. Summarize from this conversation and the workspace state (`git status`, `git diff --stat` in the working repo):
+   - what was completed;
+   - what failed, or was tried and abandoned;
+   - what's still open;
+   - the single most useful next action;
+   - the key files.
 
-3. **Append to today's section** under the matching day (Monday-Sunday) in the weekly log:
-
+   Don't invent results or verification you didn't actually see.
+2. Open the ISO-week file above. If it doesn't exist, create it from `30-templates/weekly-log.md`. Append under today's day heading, without overwriting:
    ```markdown
-   - **Claude Session: [brief topic]** (YYYY-MM-DD HH:MM)
-     - Done: [1-3 bullet points of what was completed]
-     - Issues: [anything broken or partially done, if any]
-     - Next: [what to do in the next session, if any]
-     - Key files: [list of main files created/modified]
-     - Knowledge captured: [will be filled in Part B]
+   - **Claude session: <topic>** (YYYY-MM-DD HH:MM)
+     - Done: <1–3 items>
+     - Issues: <blockers or failed attempts, or "none">
+     - Next: <one specific next action>
+     - Key files: <paths>
+     - Knowledge captured: pending review
    ```
+   The `Next:` line is read by the SessionStart hook at the start of the next session, so make it specific.
+3. Add real blockers under the weekly log's `## Project Blockers / Questions / Status` section, if it has one.
+4. Append to `log.md`: `## [YYYY-MM-DD] wrap | <topic>`, with the next step.
 
-4. **If there are open issues or blockers**, add them under `## Project Blockers / Questions / Status`
+## Part B: Knowledge write-back (proposal only)
 
-5. **If the weekly log file doesn't exist yet**, create it using the template structure from `30-templates/weekly-log.md`
+5. Pull out insights that pass all three tests:
+   - **Insight**: explains how, why, or when.
+   - **Reuse**: would help in another session, project or customer.
+   - **Novel**: Grep `20-notes/` and check `index.md` to see whether the vault already has it.
 
----
+   Good candidates: root causes, verified limitations, solution patterns, approach comparisons, architecture decisions, performance results with data.
 
-## Part B: Knowledge Write-Back
-
-After the log entry is written, extract vault-worthy knowledge from this session.
-
-### Step 6 — Knowledge Extraction
-
-Scan the full conversation and apply a 3-part filter:
-
-**1. Technical Insight Test**: Does this explain HOW something works, WHY it behaves a certain way, or WHEN to use one approach over another?
-
-**2. Reusability Test**: Would this knowledge help in a different session, for a different customer, or on a different project?
-
-**3. Novelty Test**: Does the vault already have this knowledge? (Search `20-notes/`)
-
-**Vault-worthy**: root cause analyses, solution patterns, undocumented behaviors, approach comparisons, customer-derived insights, architecture decisions, performance observations with data.
-
-**NOT vault-worthy**: routine edits, formatting, scheduling, simple lookups, code-only artifacts without transferable knowledge.
-
-If there are NO vault-worthy insights, say "No vault-worthy insights from this session" and stop here.
-
-### Step 7 — Vault Search
-
-For each extracted insight:
-1. Search `20-notes/` filenames and content for related notes
-2. Read the most relevant 2-3 matching notes
-3. Decide: **enhance existing note** vs. **create new note** — prefer enhancing
-
-### Step 8 — Proposal
-
-Present write-back proposals. Do NOT execute without confirmation.
-
-```markdown
-## Vault Write-Back Proposals
-
-1. **[Insight title]** → Enhance `existing-note.md`
-   - Section: [which section to add to]
-   - Preview: [2-3 sentence summary]
-
-2. **[Insight title]** → Create new `type-name.md`
-   - Type: [concept/guide/code-pattern/databricks-feature]
-   - Preview: [2-3 sentence summary]
-
-Approve all? Select specific items (e.g., "1,3")? Or skip?
-```
-
-### Step 9 — Execute (only after user confirms)
-
-**For enhancements**: weave into appropriate section, add 3+ cross-links, update `last_verified`.
-**For new notes**: load template from `30-templates/`, write 500-1500 words, add frontmatter and 3+ cross-links, check MOCs.
-
-### Step 10 — Update Log Entry
-
-Append to the session entry: `- Knowledge captured: [[note-1]] (enhanced), [[note-2]] (new)`
-
----
+   If nothing qualifies, say "No vault-worthy insights from this session", set `Knowledge captured: none`, and stop.
+6. For each insight, read the 2–3 closest notes and decide whether to enhance one of them (preferred) or create a new note.
+7. Propose:
+   ```
+   1. <Insight> → enhance `20-notes/x.md` § <section> — <2-sentence preview>
+   2. <Insight> → create `20-notes/<type>-<name>.md` (<type>) — <preview>
+   Approve all, some (e.g. "1,3"), or skip?
+   ```
+8. On approval:
+   - Follow the conventions: evidence-based inline links and `last_verified: today`.
+   - Set `sources:` to the session (`session: <date> <topic>`) plus any URLs or docs you checked.
+   - Use the vault templates for new notes, and add them to `index.md`.
+9. Replace `pending review` in the log entry with `[[note]] (enhanced|new)` links.
 
 ## Rules
 
-- Keep log entries concise — 3-5 lines max per session
-- Always include the "Next" line so future sessions have a starting point
-- Reference specific file paths so the next session can pick up immediately
-- Do NOT overwrite existing content in the weekly log — only append
-- Never auto-execute write-backs without user confirmation
-- Prefer enhancing existing notes over creating new ones
-- If the session was purely operational, skip Part B entirely
+- Never trigger implicitly. The Stop hook only *suggests* this skill to the user.
+- Logs are factual and short (3–6 lines). Append only.
+- Never write permanent notes without explicit approval. Never commit or push.

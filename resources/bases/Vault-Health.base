@@ -1,0 +1,31 @@
+filters:
+  and:
+    - file.inFolder("20-notes")
+views:
+  - type: table
+    name: Needs review (90+ days)
+    filters:
+      and:
+        - note.last_verified < today() - "90 days"
+    order:
+      - file.name
+      - note.type
+      - note.last_verified
+  - type: table
+    name: Recently changed
+    filters:
+      and:
+        - file.mtime > now() - "2 weeks"
+    order:
+      - file.name
+      - note.type
+      - file.mtime
+    limit: 25
+  - type: table
+    name: By type
+    groupBy:
+      property: note.type
+    order:
+      - file.name
+      - note.domain
+      - note.last_verified

@@ -5,6 +5,7 @@ availability: GA | Public Preview | Private Preview
 last_verified: {{date}}
 databricks_docs:
 tags: [databricks]
+sources: []
 ---
 
 # {{feature_name}}

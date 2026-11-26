@@ -1,23 +1,24 @@
 {
   "name": "knowledge-vault",
-  "description": "LLM-powered personal knowledge base with Karpathy-style compilation pipeline. Setup, compile, enhance, and maintain an Obsidian vault where every interaction compounds knowledge.",
-  "version": "1.0.0",
+  "displayName": "Knowledge Vault",
+  "version": "2.0.0",
+  "description": "LLM-maintained Obsidian knowledge base (Karpathy-style LLM wiki): ingest sources into immutable raw/, compile them into interlinked notes with provenance, query with citations, and lint/enhance the graph. Every session compounds knowledge.",
   "author": {
     "name": "Q Yu"
   },
-  "skills": "./skills/",
-  "commands": "./commands/",
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-wrap-reminder/handler.sh"
-          }
-        ]
-      }
-    ]
+  "keywords": ["knowledge-base", "obsidian", "llm-wiki", "zettelkasten", "second-brain", "karpathy"],
+  "userConfig": {
+    "vault_path": {
+      "type": "directory",
+      "title": "Vault path",
+      "description": "Root folder of your Obsidian knowledge vault. Skills and hooks use it from any directory. Leave empty to use the current working directory.",
+      "required": false
+    },
+    "workspace_root": {
+      "type": "directory",
+      "title": "Workspace root",
+      "description": "Folder that /project-status scans for project directories (default ~/workspace).",
+      "required": false
+    }
   }
 }

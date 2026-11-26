@@ -3,6 +3,7 @@ type: code-pattern
 language: python | sql | scala
 domain: spark | mlflow | pytorch | general
 tags: [code-pattern]
+sources: []
 date_added: {{date}}
 last_verified: {{date}}
 ---

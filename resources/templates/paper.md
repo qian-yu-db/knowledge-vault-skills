@@ -6,6 +6,7 @@ github: ""
 year:
 authors: []
 tags: [paper]
+sources: []
 date_added: {{date}}
 last_verified: {{date}}
 ---
@@ -44,11 +45,11 @@ last_verified: {{date}}
 -
 
 ### Customer Applications
-<!-- How might this apply to Databricks customer use cases? -->
+<!-- How might this apply to the use cases in your work context (see CLAUDE.md About Me)? -->
 -
 
 ### Learning Goals Connection
-<!-- Connect to 2026 goals: Agentic Design, Fine-tuning, Inference Optimization -->
+<!-- Connect to the Learning Goals listed in the vault CLAUDE.md -->
 -
 
 ### Practical Takeaways
