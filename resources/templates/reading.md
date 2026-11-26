@@ -3,6 +3,7 @@ type: reading
 domain:
 source:
 author:
+sources: []
 status: status/active
 confidence: confidence/verified
 tags:

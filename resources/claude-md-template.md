@@ -1,6 +1,7 @@
 # Obsidian Knowledge Base - Claude Code Context
 
-This is an LLM-powered personal knowledge base using the Karpathy-style compilation pipeline.
+This is an LLM-maintained personal knowledge base (Karpathy-style "LLM wiki"). Three layers:
+**raw/** holds immutable sources, **20-notes/** holds the compiled, interlinked notes (Claude maintains them), and **this file** is the schema that you and Claude evolve together.
 
 ---
 
@@ -31,12 +32,24 @@ This is an LLM-powered personal knowledge base using the Karpathy-style compilat
 - [Principle 2]
 - [Principle 3]
 
+### Learning Goals
+<!-- /weekly-quiz rotates through this list; notes link "Relevance to My Work" to it -->
+- [Goal 1]
+- [Goal 2]
+- [Goal 3]
+
+### Workspace Categories (optional, used by /project-status --reindex)
+<!-- glob → category; list container folders whose subfolders are separate projects -->
+- Containers: `developments`
+- `customer_*` → customer-poc
+- `*-examples`, `*_old` → reference-repo
+
 ---
 
 ## Vault Structure
 
 ```
-00-inbox/        # Quick capture, unsorted — raw sources land here
+00-inbox/        # Queue of unprocessed captures (web clips, quick notes)
 01-projects/     # Active work with deadlines
 02-customers/    # Customer/client engagement notes
 10-mocs/         # Maps of Content (entry points to topic clusters)
@@ -44,9 +57,20 @@ This is an LLM-powered personal knowledge base using the Karpathy-style compilat
 30-templates/    # Note templates
 40-archive/      # Completed/deprecated content
 50-logs/         # Weekly logs and reflections
+raw/             # IMMUTABLE processed sources: raw/YYYY-MM/<slug>.md (never edited)
 assets/          # Images, PDFs, attachments
   └── papers/    # PDF papers for summarization
+index.md         # Catalog of every compiled note (read first when answering)
+log.md           # Append-only operations log: ## [YYYY-MM-DD] <op> | <title>
 ```
+
+## Provenance Rules
+
+- Processed inbox items move to `raw/YYYY-MM/`. They are never deleted or edited.
+- Every compiled note has a `sources:` frontmatter list (raw paths and/or URLs). Cite sources, not other compiled notes.
+- Keep source claims apart from interpretation (`## My Take`, `## Relevance to My Work`).
+- Size notes to their content (most are 300–1200 words). Split multi-topic sources instead of writing long notes.
+- Link only to notes that exist, and only where the relationship is stated in the text.
 
 ## Note Types & Required Frontmatter
 
@@ -59,6 +83,8 @@ assets/          # Images, PDFs, attachments
 | concept | type, domain, confidence | 20-notes/ |
 | reading | type, domain, source, author | 20-notes/ |
 | guide | type, domain | 20-notes/ |
+| synthesis | type, question, sources | 20-notes/ |
+| databricks-feature | type, product_area, last_verified | 20-notes/ |
 | customer | type, customer_name, industry, status | 02-customers/ |
 | log | type, week | 50-logs/ |
 | reflection | type, period | 50-logs/reflections/ |
@@ -66,6 +92,8 @@ assets/          # Images, PDFs, attachments
 | annual-plan | type, year, status | 50-logs/YYYY/ |
 | assessment | type, skill, date, score | 50-logs/YYYY/assessments/ |
 | moc | type, domain, updated | 10-mocs/ |
+
+Compiled types (paper, concept, reading, guide, code-pattern, databricks-feature, synthesis) should also have `sources:` and `last_verified:`.
 
 ## Tag Taxonomy
 
@@ -93,37 +121,12 @@ confidence/verified, confidence/needs-review, confidence/outdated
 
 ## Key Workflows
 
-### Processing Inbox Notes (LLM Compilation)
-The `/process-inbox` command deep-compiles raw inbox notes into the vault's knowledge graph using a 5-phase approach:
+The plugin's skills handle the workflows (`/knowledge-vault:<skill>`). Their shared rules are in the plugin's `resources/vault-conventions.md`.
 
-1. **Analyze**: Extract core thesis, key concepts, novel claims, and practical implications from each inbox note
-2. **Search**: Scan `20-notes/` and `10-mocs/` for related existing content to understand what the vault already knows
-3. **Triage**: For each note, decide CREATE (new note), MERGE (enhance existing), or SPLIT (multi-topic source) — present plan and wait for confirmation
-4. **Compile**: Synthesize 1500-3000 words per note following the matching template, with 5-10 inline `[[links]]`, source attribution, and "Relevance to My Work" connections
-5. **Cross-link**: Add backlinks in 3-5 existing notes that should reference the new content; update relevant MOCs
-
-Quality targets: explain don't summarize, connect to your professional context, inline linking in prose, identify vault gaps.
-
-### Session Knowledge Write-Back
-The `/session-wrap` skill (in addition to writing the weekly log) extracts vault-worthy knowledge from the session:
-
-1. **Extract**: Identify technical insights using 3-part filter (Technical Insight + Reusability + Novelty tests)
-2. **Search**: Find related existing notes in the vault
-3. **Propose**: Present write-back proposals (enhance existing note or create new note) — wait for confirmation
-4. **Execute**: Write 500-1500 words per insight, with cross-links. Update the log entry with references to captured knowledge.
-
-Vault-worthy: root cause analyses, solution patterns, undocumented behaviors, approach comparisons, customer insights.
-NOT vault-worthy: routine edits, scheduling, simple lookups.
-
-### Vault Enhancement (Lint & Maintain Cycle)
-The `/vault-enhance` command actively improves the knowledge graph — Karpathy's Phase 4:
-
-1. **Scan**: Find weak notes (thin content, few links, orphans, stale dates)
-2. **Auto-link**: Discover notes that mention each other's topics but don't link — add the links
-3. **Enrich**: Expand the top 5 weakest notes with deeper content, examples, and cross-links
-4. **Suggest**: Identify new note candidates, MOC candidates, and merge candidates
-
-Baked into rhythms: weekly log has a "Vault Health" checklist, monthly reflection has a "Deep Clean" section.
+- **Ingest** (`process-inbox`): analyze → search the vault → triage plan (CREATE / MERGE / SPLIT / SKIP, needs approval) → compile (one subagent per source) → archive the source to `raw/` → backlinks, MOCs, `index.md`, `log.md` → lint.
+- **Query** (`vault-query`): `index.md` → search → answer with `[[citations]]` and gaps → optionally file the answer as a `synthesis` note.
+- **Lint** (`vault-audit`, `vault-enhance`, `review-outdated`): the deterministic lint script, plus optional semantic checks (contradictions, unsupported or stale claims), then confirmed fixes.
+- **Write-back** (`session-wrap`): weekly log entry and `log.md`, then proposed insights for permanent notes (needs approval).
 
 ### Marking Notes as Outdated
 1. Add `status/outdated` tag
@@ -133,7 +136,7 @@ Baked into rhythms: weekly log has a "Vault Health" checklist, monthly reflectio
 
 ### Creating MOCs
 Trigger: when a topic has 5+ related notes
-Structure: concepts → papers → implementations → experiments → open questions
+Structure: concepts → papers → guides/patterns → experiments → open questions, plus an embedded ```base``` view of notes linking to the MOC (Obsidian Bases, a core plugin)
 
 ## Version-Sensitive Content
 
@@ -146,26 +149,28 @@ For library-dependent code or API documentation:
 
 Templates are in `30-templates/` - use these when creating new notes.
 
-## Slash Commands
+## Skills (knowledge-vault plugin)
 
-Commands provided by the knowledge-vault plugin:
+| Skill | Description |
+|-------|-------------|
+| `/knowledge-vault:setup-vault <path>` | Create a vault, or upgrade an existing one in place |
+| `/knowledge-vault:process-inbox` | Ingest and compile inbox sources (provenance, index, log) |
+| `/knowledge-vault:vault-query <question>` | Answer from the vault with citations; file the answer back |
+| `/knowledge-vault:vault-audit [--deep]` | Health report; `--deep` adds contradiction and claim checks |
+| `/knowledge-vault:vault-enhance` | Add missing links, enrich weak notes, fix index drift |
+| `/knowledge-vault:review-outdated` | Re-verify stale notes against current sources |
+| `/knowledge-vault:build-moc <topic>` | Create or update a MOC with a live Bases view |
+| `/knowledge-vault:new-paper <url>` | Paper note with raw abstract and context |
+| `/knowledge-vault:new-customer <name> [id]` | Customer or engagement note |
+| `/knowledge-vault:weekly-quiz [area]` | Interactive quiz over Learning Goals |
+| `/knowledge-vault:project-status [--reindex]` | Workspace project overview |
+| `/knowledge-vault:session-wrap` | Session handoff log plus knowledge write-back |
 
-| Command | Description |
-|---------|-------------|
-| `/setup-vault <path>` | Bootstrap a new vault from scratch |
-| `/process-inbox` | Deep-compile inbox notes into vault knowledge graph |
-| `/build-moc <topic>` | Create or update a MOC for a topic |
-| `/new-paper <url-or-title>` | Create a paper note from URL or title |
-| `/new-customer <name>` | Create a new customer note in 02-customers/ |
-| `/review-outdated` | Find notes needing review (>90 days old) |
-| `/vault-audit` | Full health check: broken links, orphans, metadata |
-| `/vault-enhance` | Actively enrich weak notes, auto-link, discover gaps |
-| `/weekly-quiz [skill]` | Generate 5-question quiz for skill reinforcement |
-| `/project-status` | Aggregate status from active projects |
+Hooks: when a session starts inside the vault, Claude gets an inbox and lint summary plus the last "Next:" step. Every note Claude writes is linted, and errors go back to Claude. A substantive session triggers a one-time reminder to wrap it up.
 
 ### Recommended Schedule
 
-- **Weekly** (planning session): `/process-inbox` + `/vault-enhance` + `/weekly-quiz`
-- **Monthly** (reflection): `/vault-audit` + `/vault-enhance` + `/review-outdated`
-- **End of session** (auto-prompted): `/session-wrap` — Stop hook reminds you when the session was substantive
-- **As needed**: `/new-paper`, `/build-moc`
+- **Weekly**: `process-inbox` + `vault-enhance` + `weekly-quiz`
+- **Monthly**: `vault-audit --deep` + `review-outdated`
+- **End of a substantive session**: `session-wrap`
+- **Any time**: `vault-query`, `new-paper`, `build-moc`

@@ -3,7 +3,9 @@ type: concept
 domain: ml | data-eng | distributed | databricks
 confidence: learning | solid | expert
 tags: [concept]
+sources: []
 date_added: {{date}}
+last_verified: {{date}}
 ---
 
 # {{concept}}

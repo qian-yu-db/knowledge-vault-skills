@@ -1,20 +1,16 @@
 {
   "name": "knowledge-vault",
-  "description": "LLM-powered personal knowledge base — Karpathy-style compilation pipeline for Obsidian",
+  "description": "LLM-maintained personal knowledge base — Karpathy-style LLM wiki for Obsidian",
   "owner": {
     "name": "Q Yu"
   },
   "plugins": [
     {
       "name": "knowledge-vault",
-      "source": ".",
-      "description": "LLM-powered personal knowledge base with Karpathy-style compilation pipeline. Setup, compile, enhance, and maintain an Obsidian vault where every interaction compounds knowledge.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Q Yu"
-      },
+      "source": "./",
+      "description": "LLM-maintained Obsidian knowledge base: ingest, compile with provenance, query with citations, lint and enhance.",
       "category": "productivity",
-      "keywords": ["knowledge-base", "obsidian", "llm", "zettelkasten", "second-brain", "karpathy"]
+      "keywords": ["knowledge-base", "obsidian", "llm-wiki", "zettelkasten", "second-brain", "karpathy"]
     }
   ]
 }

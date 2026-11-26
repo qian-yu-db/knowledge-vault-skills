@@ -15,16 +15,21 @@ updated: {{date}}
 ## Implementations & Patterns
 - [[]]
 
-## Databricks Integration
+## Platform Integration
 - [[]]
 
-## My Experiments
-```dataview
-TABLE status, date
-FROM #type/experiment
-WHERE contains(file.outlinks, this.file.link)
-SORT date DESC
-LIMIT 5
+## Notes Linking Here (live)
+```base
+filters:
+  and:
+    - file.hasLink(this.file)
+views:
+  - type: table
+    name: Notes linking here
+    order:
+      - file.name
+      - note.type
+      - note.last_verified
 ```
 
 ## Open Questions
